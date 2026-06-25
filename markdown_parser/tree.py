@@ -1,7 +1,6 @@
 import regex as re
 from .node import MarkdownNode
 
-
 class MarkdownTree:
     HEADER_REGEX = re.compile(r"^(#{1,6})[ \t]+(.+)$", re.MULTILINE)
 
@@ -9,7 +8,6 @@ class MarkdownTree:
         self.root = MarkdownNode(0, "ROOT")
 
     def parse(self, markdown_text: str):
-        """Parse markdown text into the tree structure based on headings and content."""
         positions = []
         for match in self.HEADER_REGEX.finditer(markdown_text):
             positions.append(
@@ -47,11 +45,6 @@ class MarkdownTree:
                     stack[-1].add_content(content)
 
     def find_node_by_path(self, path: str) -> MarkdownNode | None:
-        """
-        Find a node by absolute path like 'Introduction.Installation.Windows'.
-        Path with single name refers to a top-level section.
-        Returns None if path not found.
-        """
         parts = path.split(".")
         current_nodes = [self.root]
         for part in parts:
@@ -71,11 +64,6 @@ class MarkdownTree:
         return current_nodes[0] if current_nodes else None
 
     def remove_section(self, path: str) -> bool:
-        """
-        Remove a section by absolute path.
-        If path is a single name, it refers to a top-level section.
-        Returns True if node removed, False otherwise.
-        """
         node = self.find_node_by_path(path)
         if node and node.parent:
             node.parent.remove_child(node)
@@ -85,12 +73,6 @@ class MarkdownTree:
     def add_section(
         self, parent_path: str, title: str, content=""
     ) -> MarkdownNode | None:
-        """
-        Add a new section under the specified parent by dot-separated path.
-        Level is inferred automatically as parent level + 1.
-        If parent_path is empty or "ROOT", adds under root (level 1).
-        Returns the newly added node or None if parent not found.
-        """
         if parent_path in ("", "ROOT"):
             parent_node = self.root
         else:
@@ -107,11 +89,9 @@ class MarkdownTree:
         return new_node
 
     def dump(self) -> str:
-        """Generate full markdown text from the tree."""
         return self.root.dump()
 
     def visualize(self):
-        """Print heading hierarchy as a tree."""
         self.root.print_tree()
 
     def attach_subtree(
@@ -121,14 +101,6 @@ class MarkdownTree:
         source_path: str | None = None,
         max_level: int = 6,
     ):
-        """Attach a subtree (or all top-level sections) from source_tree under target_path.
-
-        target_path: path in THIS tree designating parent ("" or ROOT for root)
-        source_tree: other MarkdownTree providing nodes
-        source_path: path inside source_tree to the subtree root; if None/ROOT attach all top-level sections
-        max_level: clamp heading level at this value
-        Returns list of newly attached cloned nodes.
-        """
         # Resolve parent in destination tree
         if target_path in ("", "ROOT"):
             parent = self.root
